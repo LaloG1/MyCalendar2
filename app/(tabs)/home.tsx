@@ -1,6 +1,9 @@
-import { useRouter } from "expo-router"; // ✅ Añade esta importación
+import { useRouter } from "expo-router";
+import { useRef } from "react"; // ✅ Añade esta importación
 import {
+  Animated,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,9 +15,43 @@ import { useAuth } from "../../src/contexts/AuthContext";
 export default function HomeScreen() {
   const { signOut } = useAuth();
   const theme = useColorScheme(); // "dark" | "light"
-  const router = useRouter(); // ✅ Añade esta línea
-
+  const router = useRouter();
   const isDark = theme === "dark";
+
+  // Animación de flash blanco
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1)).current; // ✅ Ahora useRef está definido
+
+  const animatePress = () => {
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(flashOpacity, {
+          toValue: 0.4,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flashOpacity, {
+          toValue: 0,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      router.push("/calendar");
+    });
+  };
 
   return (
     <View
@@ -36,14 +73,31 @@ export default function HomeScreen() {
 
       {/* Dashboard simple */}
       <View style={styles.dashboard}>
-        <View
-          style={[styles.card, isDark && styles.cardDark]}
-          onTouchEnd={() => router.push("/calendar")} /* ✅ Ahora router está definido */
-        >
-          <Text style={[styles.cardTitle, isDark && styles.cardTitleDark]}>
-            Calendario
-          </Text>
-        </View>
+        <Pressable onPress={animatePress} style={{ flex: 1 }}>
+          <Animated.View
+            style={[
+              styles.card,
+              isDark && styles.cardDark,
+              { transform: [{ scale }] },
+            ]}
+          >
+            {/* Texto */}
+            <Text style={[styles.cardTitle, isDark && styles.cardTitleDark]}>
+              Calendario
+            </Text>
+
+            {/* Overlay blanco animado */}
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: "white",
+                opacity: flashOpacity,
+                borderRadius: 14,
+              }}
+            />
+          </Animated.View>
+        </Pressable>
 
         <View style={[styles.card, isDark && styles.cardDark]}>
           <Text style={[styles.cardTitle, isDark && styles.cardTitleDark]}>
@@ -97,8 +151,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginHorizontal: 5,
     elevation: 3,
-    justifyContent: "center", // ⬅ centra vertical
-    alignItems: "center", // ⬅ centra horizontal
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   cardDark: {
