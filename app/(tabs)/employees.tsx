@@ -1,9 +1,9 @@
 import { Text, View } from "react-native";
 
-export default function CalendarScreen() {
+export default function EmployeesScreen() {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Pantalla calendario</Text>
+      <Text>Pantalla empleados</Text>
     </View>
   );
 }
