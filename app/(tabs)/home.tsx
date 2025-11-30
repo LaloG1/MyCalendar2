@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 import {
@@ -61,6 +62,7 @@ export default function HomeScreen() {
       {/* Footer fijo abajo */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutBtn} onPress={signOut}>
+          <Ionicons name="warning-outline" size={20} color="white" />
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
@@ -115,18 +117,26 @@ const styles = StyleSheet.create({
   },
 
   logoutBtn: {
-    backgroundColor: "#ff6b6b",
-    paddingVertical: 12,
+    backgroundColor: "#ff3b30", // rojo tipo iOS (danger)
+    paddingVertical: 14,
     paddingHorizontal: 25,
-    borderRadius: 12,
-    width: "70%",
+    borderRadius: 14,
+    width: "80%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    // sombra elegante
+    shadowColor: "#ff0000",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5, // Android
   },
-
   logoutText: {
     color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    textAlign: "center",
+    fontWeight: "600",
+    fontSize: 17,
+    marginLeft: 8,
   },
   row: {
     flexDirection: "row",
