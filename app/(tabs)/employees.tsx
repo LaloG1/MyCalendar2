@@ -1,27 +1,27 @@
 // app/(tabs)/employees.tsx
 import { Ionicons } from "@expo/vector-icons";
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    orderBy as fbOrderBy,
-    onSnapshot,
-    query,
-    updateDoc,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  orderBy as fbOrderBy,
+  onSnapshot,
+  query,
+  updateDoc,
 } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { db } from "../../src/firebase/firebase";
 
@@ -150,31 +150,37 @@ export default function EmployeesScreen() {
   };
 
   const saveEmployee = async () => {
-    if (!employeeNumber || !employeeName) {
-      Alert.alert("Error", "Completa número y nombre.");
-      return;
-    }
+  if (!employeeNumber || !employeeName) {
+    Alert.alert("Error", "Completa número y nombre.");
+    return;
+  }
 
-    const payload = {
-      number: Number(employeeNumber),
-      name: employeeName.trim(),
-    };
-
-    try {
-      if (editingId) {
-        await updateDoc(doc(db, "employees", editingId), payload);
-      } else {
-        await addDoc(collection(db, "employees"), payload);
-      }
-      setModalVisible(false);
-      setEmployeeName("");
-      setEmployeeNumber("");
-      setEditingId(null);
-    } catch (err) {
-      console.error("saveEmployee error:", err);
-      Alert.alert("Error", "No se pudo guardar. Revisa la consola.");
-    }
+  const payload = {
+    number: Number(employeeNumber),
+    name: employeeName.trim(),
   };
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "employees", editingId), payload);
+      Alert.alert("Éxito", "Empleado actualizado correctamente.");
+    } else {
+      await addDoc(collection(db, "employees"), payload);
+      Alert.alert("Éxito", "Empleado agregado correctamente.");
+    }
+
+    // Cerrar modal + reset
+    setModalVisible(false);
+    setEmployeeName("");
+    setEmployeeNumber("");
+    setEditingId(null);
+
+  } catch (err) {
+    console.error("saveEmployee error:", err);
+    Alert.alert("Error", "No se pudo guardar. Revisa la consola.");
+  }
+};
+
 
   // -------------------------
   //  Eliminar con confirmación
@@ -531,9 +537,18 @@ function SortIcon({ dir }: { dir: "asc" | "desc" }) {
 
 /* ---------- Styles ---------- */
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  container: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 40, // <<--- AGREGA ESTO
+    backgroundColor: "#fff",
+  },
 
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   headerRow: {
     flexDirection: "row",
