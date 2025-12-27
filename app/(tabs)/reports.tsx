@@ -408,12 +408,13 @@ export default function ReportesScreen() {
             )}
           </Text>
 
-          {/* HEADER */}
+          {/* HEADER - con nuevas proporciones */}
           <View style={styles.headerRow}>
-            <Text style={[styles.headerCell, { flex: 0.5 }]}>#</Text>
-            <Text style={[styles.headerCell, { flex: 1.5 }]}>N°</Text>
-            <Text style={[styles.headerCell, { flex: 2 }]}>Nombre</Text>
-            <Text style={[styles.headerCell, { flex: 3 }]}>Fechas</Text>
+            <Text style={[styles.headerCell, { flex: 0.4 }]}>#</Text>
+            <Text style={[styles.headerCell, { flex: 1.2 }]}>N°</Text>
+            <Text style={[styles.headerCell, { flex: 1.8 }]}>Nombre</Text>
+            <Text style={[styles.headerCell, { flex: 1.6 }]}>Fechas</Text>
+            <Text style={[styles.headerCell, { flex: 1 }]}>Días</Text>
           </View>
 
           {/* FLATLIST - SOLO ESTA PARTE HACE SCROLL */}
@@ -422,17 +423,32 @@ export default function ReportesScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <View style={styles.resultRow}>
-                <Text style={[styles.resultCell, { flex: 0.5, textAlign: "center" }]}>
+                <Text style={[styles.resultCell, { flex: 0.4, textAlign: "center" }]}>
                   {index + 1}
                 </Text>
-                <Text style={[styles.resultCell, { flex: 1.5, textAlign: "center", fontWeight: "600" }]}>
+                <Text style={[styles.resultCell, { flex: 1.2, textAlign: "center", fontWeight: "600" }]}>
                   {item.number}
                 </Text>
-                <Text style={[styles.resultCell, { flex: 2, textAlign: "center" }]}>
+                <Text style={[styles.resultCell, { flex: 1.8, textAlign: "center" }]}>
                   {item.name}
                 </Text>
-                <Text style={[styles.resultCell, { flex: 3, textAlign: "center", fontSize: 12 }]}>
-                  {item.dates.join(", ")}
+                {/* Columna de fechas con viñetas y una por línea */}
+                <View style={[styles.datesContainer, { flex: 1.6 }]}>
+                  {item.dates.map((date, idx) => (
+                    <View key={idx} style={styles.dateItem}>
+                      <Text style={styles.bullet}>•</Text>
+                      <Text style={styles.dateText}>
+                        {new Date(date).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit'
+                        })}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+                <Text style={[styles.resultCell, { flex: 1, textAlign: "center", fontWeight: "700", color: "#2563eb" }]}>
+                  {item.dates.length}
                 </Text>
               </View>
             )}
@@ -465,7 +481,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 8,
-    // Sin flex, ocupa solo el espacio que necesita
   },
   title: {
     fontSize: 24,
@@ -533,7 +548,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563eb",
     padding: 12,
     borderRadius: 8,
-    marginBottom: 16, // Mantenido para separación
+    marginBottom: 16,
     alignItems: "center",
   },
   weekButtonText: {
@@ -568,7 +583,6 @@ const styles = StyleSheet.create({
   resultsContainer: {
     flex: 1,
     paddingHorizontal: 16,
-    // Ocupa TODO el espacio restante
   },
   resultsTitle: {
     fontSize: 18,
@@ -591,21 +605,42 @@ const styles = StyleSheet.create({
   headerCell: {
     textAlign: "center",
     fontWeight: "700",
+    fontSize: 14,
   },
   flatListContent: {
-    paddingBottom: Platform.OS === 'ios' ? 60 : 40, // Espacio para barra de navegación
+    paddingBottom: Platform.OS === 'ios' ? 60 : 40,
   },
   resultRow: {
     flexDirection: "row",
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 6,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#f8f8f0",
     borderRadius: 8,
     marginTop: 6,
-    alignItems: "center",
+    alignItems: "flex-start", // Cambiado a flex-start para alinear con el contenido de fechas
   },
   resultCell: {
     fontSize: 14,
     color: '#334155',
+    alignSelf: 'center', // Centra verticalmente las celdas simples
+  },
+  datesContainer: {
+    justifyContent: 'center',
+  },
+  dateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  bullet: {
+    fontSize: 16,
+    color: '#64748b',
+    marginRight: 4,
+    lineHeight: 20,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#334155',
+    lineHeight: 20,
   },
 });
