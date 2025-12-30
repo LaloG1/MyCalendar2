@@ -1,11 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -201,11 +195,26 @@ export default function CalendarScreen() {
   };
 
   /* ---------------- ELIMINAR ---------------- */
+  const confirmRemoveEmployee = (emp: Employee) => {
+    Alert.alert(
+      "Eliminar empleado",
+      `¿Deseas quitar a ${emp.name} del día ${selectedDate}?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => removeEmployee(emp.id),
+        },
+      ]
+    );
+  };
+
   const removeEmployee = async (empId: string) => {
     if (!selectedDate) return;
     const ref = doc(db, "calendar", selectedDate);
     const current = calendarData[selectedDate]?.employees || [];
-    await updateDoc(ref, {
+    await setDoc(ref, {
       employees: current.filter((e: any) => e.id !== empId),
     });
   };
@@ -313,7 +322,7 @@ export default function CalendarScreen() {
                     <TouchableOpacity
                       onPress={(e) => {
                         e.stopPropagation();
-                        removeEmployee(item.id);
+                        confirmRemoveEmployee(item);
                       }}
                       style={{ flex: 0.5, alignItems: "center" }}
                     >

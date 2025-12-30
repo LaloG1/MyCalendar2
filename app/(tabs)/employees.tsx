@@ -8,7 +8,6 @@ import {
   orderBy as fbOrderBy,
   onSnapshot,
   query,
-  updateDoc,
 } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -44,11 +43,9 @@ export default function EmployeesScreen() {
   // UI / filtros
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const pageSize = 6;
 
-  // Modal add/edit
+  // Modal add (solo agregar, no editar)
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [employeeName, setEmployeeName] = useState("");
 
@@ -61,7 +58,6 @@ export default function EmployeesScreen() {
   // -------------------------
   useEffect(() => {
     setLoading(true);
-    // Traemos ordenado por número por defecto desde el servidor (para rendimiento)
     const q = query(collection(db, "employees"), fbOrderBy("number", "asc"));
 
     const unsub = onSnapshot(
@@ -98,54 +94,27 @@ export default function EmployeesScreen() {
   }, [employees, search]);
 
   // -------------------------
-  //  Ordenamiento cliente (encabezados)
+  //  Ordenamiento cliente
   // -------------------------
   const sorted = useMemo(() => {
     const arr = [...filtered].map((item, i) => ({ ...item, index: i + 1 }));
     const dir = sortDir === "asc" ? 1 : -1;
 
     arr.sort((a, b) => {
-      if (sortBy === "index") {
-        return (a.index - b.index) * dir;
-      }
-      if (sortBy === "number") {
-        return (a.number - b.number) * dir;
-      }
-      // name
+      if (sortBy === "index") return (a.index - b.index) * dir;
+      if (sortBy === "number") return (a.number - b.number) * dir;
       return a.name.localeCompare(b.name) * dir;
     });
 
-    // Reassign index after sort to show numeric IDs 1..N according to current filter+sort
     return arr.map((item, idx) => ({ ...item, index: idx + 1 }));
   }, [filtered, sortBy, sortDir]);
 
   // -------------------------
-  //  Paginación
-  // -------------------------
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [totalPages]);
-
-  const paginated = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return sorted.slice(start, start + pageSize);
-  }, [sorted, page]);
-
-  // -------------------------
-  //  Guardar (Agregar / Editar)
+  //  Guardar (solo Agregar)
   // -------------------------
   const openAddModal = () => {
-    setEditingId(null);
     setEmployeeName("");
     setEmployeeNumber("");
-    setModalVisible(true);
-  };
-
-  const openEditModal = (item: Employee) => {
-    setEditingId(item.id);
-    setEmployeeName(item.name);
-    setEmployeeNumber(String(item.number));
     setModalVisible(true);
   };
 
@@ -161,19 +130,13 @@ export default function EmployeesScreen() {
     };
 
     try {
-      if (editingId) {
-        await updateDoc(doc(db, "employees", editingId), payload);
-        Alert.alert("Éxito", "Empleado actualizado correctamente.");
-      } else {
-        await addDoc(collection(db, "employees"), payload);
-        Alert.alert("Éxito", "Empleado agregado correctamente.");
-      }
+      await addDoc(collection(db, "employees"), payload);
+      Alert.alert("Éxito", "Empleado agregado correctamente.");
 
       // Cerrar modal + reset
       setModalVisible(false);
       setEmployeeName("");
       setEmployeeNumber("");
-      setEditingId(null);
     } catch (err) {
       console.error("saveEmployee error:", err);
       Alert.alert("Error", "No se pudo guardar. Revisa la consola.");
@@ -204,7 +167,7 @@ export default function EmployeesScreen() {
   };
 
   // -------------------------
-  //  Ordenar cuando se presione encabezado
+  //  Ordenar encabezados
   // -------------------------
   const toggleSort = (col: "index" | "number" | "name") => {
     if (sortBy === col) {
@@ -221,32 +184,25 @@ export default function EmployeesScreen() {
   // -------------------------
   const exportToExcel = async (data: Employee[]) => {
     try {
-      // Prepara datos planos
       const exportData = data.map((d, i) => ({
         ID: i + 1,
         Número: d.number,
         Nombre: d.name,
       }));
 
-      // Crea workbook
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(exportData);
       XLSX.utils.book_append_sheet(wb, ws, "Empleados");
 
-      // Escribe como base64
       const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
 
-      // Guarda en cache
       const fileName = `empleados_${Date.now()}.xlsx`;
       const uri = (FileSystem as any).cacheDirectory + fileName;
 
       await FileSystem.writeAsStringAsync(uri, wbout, {
-        // Some expo-file-system versions don't expose EncodingType in the TS defs;
-        // use a runtime-safe fallback to the literal "base64".
         encoding: (FileSystem as any).EncodingType?.Base64 ?? "base64",
       });
 
-      // Compartir
       await Sharing.shareAsync(uri, {
         mimeType:
           Platform.OS === "android"
@@ -261,7 +217,7 @@ export default function EmployeesScreen() {
   };
 
   // -------------------------
-  //  Exportar a PDF (HTML -> PDF)
+  //  Exportar a PDF
   // -------------------------
   const exportToPDF = async (data: Employee[]) => {
     try {
@@ -278,28 +234,12 @@ export default function EmployeesScreen() {
 
       const html = `
         <html>
-          <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <style>
-              body { font-family: Arial, Helvetica, sans-serif; padding: 10px; }
-              table { border-collapse: collapse; width: 100%; }
-              th { background: #4e73df; color: white; padding:8px; text-align:center; }
-              td { text-align:center; }
-            </style>
-          </head>
+          <head><meta charset="utf-8"/><style>body{font-family:Arial,sans-serif;padding:10px;}table{border-collapse:collapse;width:100%;}th{background:#4e73df;color:white;padding:8px;text-align:center;}td{text-align:center;}</style></head>
           <body>
             <h2>Empleados</h2>
             <table>
-              <thead>
-                <tr>
-                  <th style="border:1px solid #ccc">ID</th>
-                  <th style="border:1px solid #ccc">Número</th>
-                  <th style="border:1px solid #ccc">Nombre</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${htmlRows}
-              </tbody>
+              <thead><tr><th>ID</th><th>Número</th><th>Nombre</th></tr></thead>
+              <tbody>${htmlRows}</tbody>
             </table>
           </body>
         </html>
@@ -316,11 +256,7 @@ export default function EmployeesScreen() {
     }
   };
 
-  // -------------------------
-  //  Exportar (usa los datos filtrados/ordenados completos, no solo la página)
-  // -------------------------
   const handleExport = async (type: "excel" | "pdf") => {
-    // export all sorted (not only current page)
     const dataToExport = sorted.map((s) => ({
       id: s.id,
       number: s.number,
@@ -386,7 +322,10 @@ export default function EmployeesScreen() {
 
       {/* Tabla headers */}
       <View style={styles.tableHeader}>
-        <TouchableOpacity style={styles.th} onPress={() => toggleSort("index")}>
+        <TouchableOpacity
+          style={[styles.th, styles.colId]}
+          onPress={() => toggleSort("index")}
+        >
           <View style={styles.thContent}>
             <Text style={styles.thText}>ID</Text>
             {sortBy === "index" && <SortIcon dir={sortDir} />}
@@ -414,75 +353,43 @@ export default function EmployeesScreen() {
         </TouchableOpacity>
 
         <View style={[styles.th, { alignItems: "center" }]}>
-          <Text style={styles.thText}>Acciones</Text>
+          <Text style={styles.thText}>Acción</Text>
         </View>
       </View>
 
-      {/* Lista paginada */}
-      <FlatList
-        data={paginated}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={() => (
-          <Text style={{ padding: 20 }}>No hay empleados</Text>
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Text style={styles.cell}>{item.index}</Text>
-            <Text style={styles.cell}>{item.number}</Text>
-            <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
-            <View style={styles.actions}>
-              <TouchableOpacity
-                onPress={() => openEditModal(item)}
-                style={styles.iconBtn}
-              >
-                <Ionicons name="create-outline" size={20} color="#4e73df" />
-              </TouchableOpacity>
+      <View style={{ flex: 1, marginTop: 8 }}>
+        {/* Lista paginada */}
+        <FlatList
+          data={sorted}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={() => (
+            <Text style={{ padding: 20 }}>No hay empleados</Text>
+          )}
+          renderItem={({ item }) => (
+            <View style={styles.row}>
+              <Text style={[styles.cell, styles.colId]}>{item.index}</Text>
 
-              <TouchableOpacity
-                onPress={() => confirmDelete(item.id)}
-                style={styles.iconBtn}
-              >
-                <Ionicons name="trash-outline" size={20} color="#ff3b30" />
-              </TouchableOpacity>
+              <Text style={styles.cell}>{item.number}</Text>
+              <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
+              <View style={styles.actions}>
+                {/* ✅ SOLO ELIMINAR — botón de editar REMOVIDO */}
+                <TouchableOpacity
+                  onPress={() => confirmDelete(item.id)}
+                  style={styles.iconBtn}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        )}
-      />
-
-      {/* Paginación */}
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          disabled={page === 1}
-          onPress={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          <Text style={[styles.pageBtn, page === 1 && styles.disabled]}>
-            ◀ Anterior
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.pageNumber}>
-          Página {page} / {totalPages}
-        </Text>
-
-        <TouchableOpacity
-          disabled={page === totalPages}
-          onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-        >
-          <Text
-            style={[styles.pageBtn, page === totalPages && styles.disabled]}
-          >
-            Siguiente ▶
-          </Text>
-        </TouchableOpacity>
+          )}
+        />
       </View>
 
-      {/* Modal Add/Edit */}
+      {/* Modal Agregar */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>
-              {editingId ? "Editar empleado" : "Nuevo empleado"}
-            </Text>
+            <Text style={styles.modalTitle}>Nuevo empleado</Text>
 
             <TextInput
               placeholder="Número de empleado"
@@ -508,7 +415,6 @@ export default function EmployeesScreen() {
                 style={styles.cancelBtn}
                 onPress={() => {
                   setModalVisible(false);
-                  setEditingId(null);
                 }}
               >
                 <Text style={styles.cancelText}>Cancelar</Text>
@@ -521,7 +427,6 @@ export default function EmployeesScreen() {
   );
 }
 
-/* ---------- Small helper for sort icon ---------- */
 function SortIcon({ dir }: { dir: "asc" | "desc" }) {
   return (
     <Ionicons
@@ -533,21 +438,18 @@ function SortIcon({ dir }: { dir: "asc" | "desc" }) {
   );
 }
 
-/* ---------- Styles ---------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: 40, // <<--- AGREGA ESTO
+    paddingTop: 40,
     backgroundColor: "#fff",
   },
-
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -555,9 +457,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: { fontSize: 22, fontWeight: "700" },
-
   headerActions: { flexDirection: "row", gap: 10, alignItems: "center" },
-
   exportBtn: {
     backgroundColor: "#2f855a",
     paddingHorizontal: 10,
@@ -567,7 +467,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   exportText: { color: "white", marginLeft: 6, fontWeight: "600" },
-
   addBtn: {
     backgroundColor: "#4e73df",
     paddingHorizontal: 10,
@@ -577,14 +476,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addText: { color: "white", marginLeft: 6, fontWeight: "600" },
-
   searchInput: {
     backgroundColor: "#f2f2f6",
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
   },
-
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#eef2ff",
@@ -594,8 +491,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   th: { flex: 1, paddingHorizontal: 4 },
-  thContent: { flexDirection: "row", alignItems: "center" },
-  thText: { fontWeight: "700", textAlign: "center" },
+  thContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // ✅ CENTRADO
+  },
+
+  thText: {
+    fontWeight: "700",
+    textAlign: "center",
+    width: "100%", // ✅ fuerza centrado real
+  },
 
   row: {
     flexDirection: "row",
@@ -606,25 +512,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cell: { flex: 1, textAlign: "center" },
-
   actions: {
     flexDirection: "row",
-    gap: 12,
-    width: 90,
     justifyContent: "center",
+    width: 60, // reducido porque solo hay un botón
   },
   iconBtn: { padding: 6 },
-
-  pagination: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
-    alignItems: "center",
-  },
-  pageBtn: { fontSize: 16, color: "#4e73df" },
-  disabled: { opacity: 0.4 },
-  pageNumber: { fontSize: 16, fontWeight: "600" },
-
   modalBg: {
     flex: 1,
     justifyContent: "center",
@@ -638,14 +531,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
-
   input: {
     backgroundColor: "#f2f2f6",
     padding: 10,
     borderRadius: 8,
     marginBottom: 8,
   },
-
   saveBtn: {
     backgroundColor: "#2f855a",
     padding: 10,
@@ -654,7 +545,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveText: { color: "white", fontWeight: "700" },
-
   cancelBtn: {
     backgroundColor: "#e2e8f0",
     padding: 10,
@@ -663,4 +553,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelText: { color: "#111", fontWeight: "600" },
+  colId: {
+    width: 40, // ✅ angosto
+    textAlign: "center",
+  },
 });

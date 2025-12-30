@@ -10,7 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { db } from "../../src/firebase/firebase";
@@ -39,7 +39,9 @@ type ReportType = "day" | "range" | "week";
 export default function ReportesScreen() {
   const [calendarData, setCalendarData] = useState<CalendarData>({});
   const [reportType, setReportType] = useState<ReportType>("day");
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -54,26 +56,29 @@ export default function ReportesScreen() {
   // Obtener todos los empleados únicos
   const allEmployees = useMemo(() => {
     const employeesMap = new Map<string, Employee>();
-    
-    Object.values(calendarData).forEach(day => {
-      day.employees?.forEach(emp => {
+
+    Object.values(calendarData).forEach((day) => {
+      day.employees?.forEach((emp) => {
         if (!employeesMap.has(emp.id)) {
           employeesMap.set(emp.id, emp);
         }
       });
     });
-    
+
     return Array.from(employeesMap.values());
   }, [calendarData]);
 
   // Filtrar empleados según la búsqueda
   const filteredEmployees = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    
-    return allEmployees.filter(emp => 
-      emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emp.number.toString().includes(searchQuery)
-    ).slice(0, 5);
+
+    return allEmployees
+      .filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          emp.number.toString().includes(searchQuery)
+      )
+      .slice(0, 5);
   }, [searchQuery, allEmployees]);
 
   const getDatesBetween = (start: string, end: string) => {
@@ -108,7 +113,7 @@ export default function ReportesScreen() {
 
       dayData.employees.forEach((emp: any) => {
         if (selectedEmployee && emp.id !== selectedEmployee.id) return;
-        
+
         if (!map[emp.id]) {
           map[emp.id] = {
             id: emp.id,
@@ -194,8 +199,8 @@ export default function ReportesScreen() {
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           />
           {selectedEmployee && (
-            <TouchableOpacity 
-              style={styles.clearButton} 
+            <TouchableOpacity
+              style={styles.clearButton}
               onPress={handleClearEmployee}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
@@ -242,7 +247,11 @@ export default function ReportesScreen() {
             activeOpacity={0.7}
           >
             <Ionicons
-              name={reportType === opt.value ? "radio-button-on" : "radio-button-off"}
+              name={
+                reportType === opt.value
+                  ? "radio-button-on"
+                  : "radio-button-off"
+              }
               size={22}
               color="#2563eb"
             />
@@ -270,13 +279,13 @@ export default function ReportesScreen() {
               }
               disableAllTouchEventsForDisabledDays={true}
               theme={{
-                calendarBackground: '#ffffff',
-                textSectionTitleColor: '#334155',
-                selectedDayBackgroundColor: '#2563eb',
-                selectedDayTextColor: '#ffffff',
-                todayTextColor: '#2563eb',
-                dayTextColor: '#334155',
-                textDisabledColor: '#94a3b8',
+                calendarBackground: "#ffffff",
+                textSectionTitleColor: "#334155",
+                selectedDayBackgroundColor: "#2563eb",
+                selectedDayTextColor: "#ffffff",
+                todayTextColor: "#2563eb",
+                dayTextColor: "#334155",
+                textDisabledColor: "#94a3b8",
               }}
             />
             {selectedDate && (
@@ -345,13 +354,13 @@ export default function ReportesScreen() {
               markingType="period"
               disableAllTouchEventsForDisabledDays={true}
               theme={{
-                calendarBackground: '#ffffff',
-                textSectionTitleColor: '#334155',
-                selectedDayBackgroundColor: '#2563eb',
-                selectedDayTextColor: '#ffffff',
-                todayTextColor: '#2563eb',
-                dayTextColor: '#334155',
-                textDisabledColor: '#94a3b8',
+                calendarBackground: "#ffffff",
+                textSectionTitleColor: "#334155",
+                selectedDayBackgroundColor: "#2563eb",
+                selectedDayTextColor: "#ffffff",
+                todayTextColor: "#2563eb",
+                dayTextColor: "#334155",
+                textDisabledColor: "#94a3b8",
               }}
             />
             {rangeStart && rangeEnd && (
@@ -383,7 +392,9 @@ export default function ReportesScreen() {
         {/* EMPLEADO SELECCIONADO */}
         {selectedEmployee && (
           <View style={styles.selectedEmployeeContainer}>
-            <Text style={styles.selectedEmployeeLabel}>Empleado seleccionado:</Text>
+            <Text style={styles.selectedEmployeeLabel}>
+              Empleado seleccionado:
+            </Text>
             <View style={styles.selectedEmployeeInfo}>
               <Text style={styles.selectedEmployeeName}>
                 {selectedEmployee.name}
@@ -403,7 +414,8 @@ export default function ReportesScreen() {
             Resultados del reporte
             {selectedEmployee && (
               <Text style={styles.resultsSubtitle}>
-                {" "}para {selectedEmployee.name}
+                {" "}
+                para {selectedEmployee.name}
               </Text>
             )}
           </Text>
@@ -423,37 +435,87 @@ export default function ReportesScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <View style={styles.resultRow}>
-                <Text style={[styles.resultCell, { flex: 0.4, textAlign: "center" }]}>
-                  {index + 1}
-                </Text>
-                <Text style={[styles.resultCell, { flex: 1.2, textAlign: "center", fontWeight: "600" }]}>
-                  {item.number}
-                </Text>
-                <Text style={[styles.resultCell, { flex: 1.8, textAlign: "center" }]}>
-                  {item.name}
-                </Text>
-                {/* Columna de fechas con viñetas y una por línea */}
-                <View style={[styles.datesContainer, { flex: 1.6 }]}>
+                {/* Columna: Índice (siempre centrado, 1 línea) */}
+                <View
+                  style={[
+                    styles.resultCellWrapper,
+                    {
+                      flex: 0.4,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <Text style={styles.resultCellIndex}>{index + 1}</Text>
+                </View>
+
+                {/* Columna: Número (siempre centrado, 1 línea) */}
+                <View
+                  style={[
+                    styles.resultCellWrapper,
+                    {
+                      flex: 1.2,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <Text style={styles.resultCellNumber}>{item.number}</Text>
+                </View>
+
+                {/* Columna: Nombre (puede ocupar varias líneas, alineado arriba) */}
+                <View
+                  style={[
+                    styles.resultCellWrapper,
+                    {
+                      flex: 1.8,
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <Text style={styles.resultCellName} numberOfLines={0}>
+                    {item.name}
+                  </Text>
+                </View>
+
+                {/* Columna: Fechas (viñetas, múltiples líneas, alineado arriba) */}
+                <View
+                  style={[
+                    styles.resultCellWrapper,
+                    {
+                      flex: 1.6,
+                      justifyContent: "flex-start",
+                      alignItems: "flex-start",
+                    },
+                  ]}
+                >
                   {item.dates.map((date, idx) => (
                     <View key={idx} style={styles.dateItem}>
                       <Text style={styles.bullet}>•</Text>
                       <Text style={styles.dateText}>
-                        {new Date(date).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: '2-digit'
+                        {new Date(date).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "2-digit",
                         })}
                       </Text>
                     </View>
                   ))}
                 </View>
-                <Text style={[styles.resultCell, { flex: 1, textAlign: "center", fontWeight: "700", color: "#2563eb" }]}>
-                  {item.dates.length}
-                </Text>
+
+                {/* Columna: Días (siempre centrado, 1 línea) */}
+                <View
+                  style={[
+                    styles.resultCellWrapper,
+                    { flex: 1, justifyContent: "center", alignItems: "center" },
+                  ]}
+                >
+                  <Text style={styles.resultCellDays}>{item.dates.length}</Text>
+                </View>
               </View>
             )}
             showsVerticalScrollIndicator={true}
-            // Optimizaciones para scroll suave y solo en la lista
             removeClippedSubviews={true}
             initialNumToRender={10}
             maxToRenderPerBatch={10}
@@ -462,7 +524,6 @@ export default function ReportesScreen() {
             scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.flatListContent}
-            // Propiedades clave para scroll solo en la lista
             nestedScrollEnabled={false}
             scrollEnabled={true}
           />
@@ -475,7 +536,7 @@ export default function ReportesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   controlsContainer: {
     paddingHorizontal: 16,
@@ -488,13 +549,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: "#cbd5e1",
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   searchInput: {
     flex: 1,
@@ -505,9 +566,9 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   suggestionsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: "#cbd5e1",
     borderRadius: 8,
     marginBottom: 16,
     zIndex: 10,
@@ -515,11 +576,11 @@ const styles = StyleSheet.create({
   suggestionItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: "#f1f5f9",
   },
   suggestionText: {
     fontSize: 16,
-    color: '#334155',
+    color: "#334155",
   },
   radioButton: {
     flexDirection: "row",
@@ -556,28 +617,28 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   selectedEmployeeContainer: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: "#f1f5f9",
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
   },
   selectedEmployeeLabel: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
     marginBottom: 4,
   },
   selectedEmployeeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   selectedEmployeeName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontWeight: "600",
+    color: "#1e293b",
   },
   selectedEmployeeNumber: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
     marginLeft: 8,
   },
   resultsContainer: {
@@ -608,39 +669,70 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   flatListContent: {
-    paddingBottom: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: Platform.OS === "ios" ? 60 : 40,
   },
   resultRow: {
     flexDirection: "row",
-    paddingVertical: 12,
     paddingHorizontal: 6,
     backgroundColor: "#f8f8f0",
     borderRadius: 8,
     marginTop: 6,
-    alignItems: "flex-start", // Cambiado a flex-start para alinear con el contenido de fechas
+    // NO usar alignItems aquí — cada celda lo maneja internamente
+    minHeight: 56, // altura mínima razonable
   },
   resultCell: {
     fontSize: 14,
-    color: '#334155',
-    alignSelf: 'center', // Centra verticalmente las celdas simples
+    color: "#334155",
+    alignSelf: "center", // Centra verticalmente las celdas simples
   },
   datesContainer: {
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   dateItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 2,
   },
   bullet: {
     fontSize: 16,
-    color: '#64748b',
+    color: "#64748b",
     marginRight: 4,
     lineHeight: 20,
   },
   dateText: {
     fontSize: 12,
-    color: '#334155',
+    color: "#334155",
     lineHeight: 20,
+  },
+  resultCellWrapper: {
+    // contenedor que maneja alineación vertical por columna
+    paddingVertical: 8,
+  },
+
+  resultCellIndex: {
+    fontSize: 14,
+    color: "#334155",
+    fontWeight: "500",
+  },
+
+  resultCellNumber: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+  },
+
+  resultCellName: {
+    fontSize: 14,
+    color: "#1e293b",
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 20,
+    // numberOfLines={0} en el componente permite multi-línea
+  },
+
+  resultCellDays: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#2563eb",
   },
 });
