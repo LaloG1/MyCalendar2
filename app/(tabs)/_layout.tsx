@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Foundation from "@expo/vector-icons/Foundation";
 import { Tabs, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -27,7 +28,7 @@ export default function TabsLayout() {
   // ⬇️ Aquí regresan las Tabs
   return (
     <Tabs screenOptions={{ headerShown: false }}>
-     <Tabs.Screen
+      <Tabs.Screen
         name="home"
         options={{
           title: "Inicio",
@@ -41,6 +42,9 @@ export default function TabsLayout() {
         name="calendar"
         options={{
           title: "Calendario",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-number-outline" size={24} color="black" />
+          ),
         }}
       />
 
@@ -49,7 +53,7 @@ export default function TabsLayout() {
         options={{
           title: "Reportes",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+            <Foundation name="clipboard-notes" size={24} color="black" />
           ),
         }}
       />
@@ -59,11 +63,10 @@ export default function TabsLayout() {
         options={{
           title: "Empleados",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+            <Ionicons name="people" size={24} color="black" />
           ),
         }}
       />
-
     </Tabs>
   );
 }

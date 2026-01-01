@@ -33,16 +33,30 @@ export default function HomeScreen() {
       {/* Primera fila: Calendario / Reportes */}
       <View style={styles.row}>
         <TouchableOpacity
-          style={styles.cardBtn}
+          style={styles.calendarBtn}
           onPress={() => router.push("/calendar")}
+          activeOpacity={0.85}
         >
+          <Ionicons
+            name="calendar-outline"
+            size={24}
+            color="white"
+            style={styles.icon}
+          />
           <Text style={styles.cardText}>Calendario</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.cardBtn}
+          style={styles.reportsBtn}
           onPress={() => router.push("/reports")}
+          activeOpacity={0.85}
         >
+          <Ionicons
+            name="document-text-outline"
+            size={24}
+            color="white"
+            style={styles.icon}
+          />
           <Text style={styles.cardText}>Reportes</Text>
         </TouchableOpacity>
       </View>
@@ -50,9 +64,16 @@ export default function HomeScreen() {
       {/* Segunda fila: Empleados */}
       <View style={styles.rowCenter}>
         <TouchableOpacity
-          style={styles.cardBtnSingle}
+          style={styles.employeesBtn}
           onPress={() => router.push("/employees")}
+          activeOpacity={0.85}
         >
+          <Ionicons
+            name="people-outline"
+            size={24}
+            color="white"
+            style={styles.icon}
+          />
           <Text style={styles.cardText}>Empleados</Text>
         </TouchableOpacity>
       </View>
@@ -163,5 +184,52 @@ const styles = StyleSheet.create({
     bottom: 30,
     width: "100%",
     alignItems: "center",
+  },
+  calendarBtn: {
+    backgroundColor: "#0B3C5D", // azul oscuro del logo
+    paddingVertical: 20,
+    borderRadius: 15,
+    width: "48%",
+    alignItems: "center",
+    shadowColor: "#1F4FD8",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+
+  reportsBtn: {
+    backgroundColor: "#14B8A6", // turquesa del logo
+    paddingVertical: 20,
+    borderRadius: 15,
+    width: "48%",
+    alignItems: "center",
+    shadowColor: "#00C9D2",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+
+  employeesBtn: {
+    backgroundColor: "#1E40AF", // azul medio
+    paddingVertical: 20,
+    borderRadius: 15,
+    width: "70%",
+    alignItems: "center",
+    shadowColor: "#0B2C5F",
+    shadowOpacity: 0.35,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  icon: {
+    marginRight: 8,
   },
 });
