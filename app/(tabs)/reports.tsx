@@ -206,47 +206,80 @@ export default function ReportesScreen() {
         )
         .join("");
 
+      const printedAt = new Date().toLocaleString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
       const html = `
 <html>
   <head>
     <meta charset="utf-8"/>
     <style>
-      body { font-family: Arial; padding: 20px; }
+      body {
+        font-family: Arial;
+        padding: 20px;
+      }
+
       .header {
         display: flex;
         align-items: center;
         margin-bottom: 20px;
       }
+
       .logo {
         width: 80px;
         margin-right: 16px;
       }
+
       h2 {
         margin: 0;
         color: #2563eb;
       }
+
       table {
-        width:100%;
+        width: 100%;
         border-collapse: collapse;
       }
+
       th, td {
-        border:1px solid #ccc;
-        padding:6px;
-        text-align:center;
+        border: 1px solid #ccc;
+        padding: 6px;
+        text-align: center;
       }
+
       th {
-        background:#2563eb;
-        color:white;
+        background: #2563eb;
+        color: white;
+      }
+
+      /* ---------- FOOTER ---------- */
+      footer {
+        position: fixed;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+        text-align: right;
+        font-size: 10px;
+        color: #64748b;
+        padding-right: 20px;
+        border-top: 1px solid #e5e7eb;
+  padding-top: 4px;
       }
     </style>
   </head>
 
   <body>
+    <!-- HEADER -->
     <div class="header">
       <img src="${logoBase64}" class="logo" />
-      <h2>Reporte de empleados</h2>
+      <h2>Reporte de vacaciones de empleados</h2>
     </div>
 
+    <!-- TABLA -->
     <table>
       <thead>
         <tr>
@@ -261,6 +294,11 @@ export default function ReportesScreen() {
         ${rows}
       </tbody>
     </table>
+
+    <!-- FOOTER -->
+    <footer>
+      Impreso el: ${printedAt}
+    </footer>
   </body>
 </html>
 `;
