@@ -28,6 +28,7 @@ export default function CalendarScreen() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [calendarData, setCalendarData] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const EMPTY_SELECTED_COLOR = "#38bdf8"; // azul cielo
 
   const [isException, setIsException] = useState(false);
   const [exceptionReason, setExceptionReason] = useState("");
@@ -91,23 +92,31 @@ export default function CalendarScreen() {
     );
   }, [search, employees, selectedDate, calendarData]);
 
+  const today = new Date().toISOString().split("T")[0];
+
   /* ---------------- MARCAS CALENDARIO ---------------- */
   const marked = useMemo(() => {
     const m: any = {};
 
     Object.keys(calendarData).forEach((date) => {
       const count = calendarData[date]?.employees?.length || 0;
+
       m[date] = {
-        marked: true,
-        dotColor: count < 4 ? "green" : "red",
+        customStyles: {
+          container: {
+            alignItems: "center",
+          },
+          text: {
+            fontWeight: "600",
+          },
+        },
+        lineColor: count < 4 ? "#16a34a" : "#dc2626", // 👈 PROPIEDAD CUSTOM
       };
     });
 
     if (selectedDate) {
       m[selectedDate] = {
         ...(m[selectedDate] || {}),
-        selected: true,
-        selectedColor: "#4e73df",
       };
     }
 
@@ -235,7 +244,84 @@ export default function CalendarScreen() {
   return (
     <View style={{ flex: 1, paddingTop: 40, paddingHorizontal: 12 }}>
       {/* CALENDARIO PRINCIPAL */}
-      <Calendar markedDates={marked} onDayPress={onDayPress} />
+      <Calendar
+        markedDates={marked}
+        markingType="custom"
+        dayComponent={({ date, state, marking }) => {
+          const customMarking = marking as any;
+
+          const isSelected = selectedDate === date?.dateString;
+          const isToday = today === date?.dateString;
+
+          const hasLine = !!customMarking?.lineColor;
+
+          // 🎨 color del círculo
+          let circleColor = "transparent";
+
+          if (isSelected && !isToday) {
+            if (hasLine) {
+              circleColor = customMarking.lineColor; // verde o rojo
+            } else {
+              circleColor = "#38bdf8"; // 🔵 azul cielo (sin registros)
+            }
+          }
+
+          return (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              disabled={state === "disabled"}
+              onPress={() => {
+                if (date?.dateString) {
+                  onDayPress({ dateString: date.dateString });
+                }
+              }}
+            >
+              <View style={{ alignItems: "center" }}>
+                {/* CÍRCULO */}
+                <View
+                  style={{
+                    backgroundColor: circleColor,
+                    borderRadius: 20,
+                    padding: 6,
+                    minWidth: 32,
+                    alignItems: "center",
+                  }}
+                >
+                  {/* NÚMERO */}
+                  <Text
+                    style={{
+                      color: isToday
+                        ? "#2563eb" // 🔵 hoy siempre azul
+                        : state === "disabled"
+                        ? "#d1d5db"
+                        : isSelected
+                        ? "white"
+                        : "#111827",
+                      fontWeight: isToday || isSelected ? "700" : "500",
+                    }}
+                  >
+                    {date?.day}
+                  </Text>
+                </View>
+
+                {/* LÍNEA */}
+                {hasLine && (
+                  <View
+                    style={{
+                      width: 18,
+                      height: 3,
+                      borderRadius: 2,
+                      marginTop: 4,
+                      backgroundColor: customMarking.lineColor,
+                    }}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        onDayPress={onDayPress}
+      />
 
       {/* BOTÓN AGREGAR */}
       <TouchableOpacity
