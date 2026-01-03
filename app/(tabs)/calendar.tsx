@@ -1,5 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
+
 import { db } from "../../src/firebase/firebase";
 
 type Employee = {
@@ -221,11 +228,18 @@ export default function CalendarScreen() {
 
   const removeEmployee = async (empId: string) => {
     if (!selectedDate) return;
+
     const ref = doc(db, "calendar", selectedDate);
     const current = calendarData[selectedDate]?.employees || [];
-    await setDoc(ref, {
-      employees: current.filter((e: any) => e.id !== empId),
-    });
+
+    const updated = current.filter((e: any) => e.id !== empId);
+
+    if (updated.length === 0) {
+      // 🔥 eliminar el día completo
+      await deleteDoc(ref);
+    } else {
+      await setDoc(ref, { employees: updated });
+    }
   };
 
   const assignedEmployees =
