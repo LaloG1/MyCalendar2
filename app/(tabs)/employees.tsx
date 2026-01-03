@@ -312,6 +312,7 @@ export default function EmployeesScreen() {
       {/* Search */}
       <TextInput
         placeholder="Buscar por nombre o número..."
+        placeholderTextColor="#000000ff"
         style={styles.searchInput}
         value={search}
         onChangeText={(t) => {

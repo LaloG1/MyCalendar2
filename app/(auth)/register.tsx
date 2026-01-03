@@ -1,7 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useAuth } from "../../src/contexts/AuthContext";
 
 export default function RegisterScreen() {
@@ -20,6 +28,8 @@ export default function RegisterScreen() {
     }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <LinearGradient
       colors={["#0A2463", "#1E90FF", "#40E0D0"]}
@@ -32,26 +42,45 @@ export default function RegisterScreen() {
 
         <TextInput
           placeholder="Email"
+          placeholderTextColor="#6b7280"
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
-          style={styles.input}
+          style={[styles.input, { color: "#111827" }]}
         />
 
-        <TextInput
-          placeholder="Contraseña"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="Contraseña"
+            placeholderTextColor="#6b7280"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            style={[styles.input, styles.passwordInput, { color: "#111827" }]}
+          />
+
+          <TouchableOpacity
+            onPress={() => setShowPassword((prev) => !prev)}
+            style={styles.eyeButton}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={22}
+              color="#1E90FF"
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
           <Text style={styles.buttonText}>Registrarse</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace("/login")}>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.replace("/login")}
+        >
           <Text style={styles.secondaryButtonText}>Volver</Text>
         </TouchableOpacity>
       </View>
@@ -128,5 +157,19 @@ const styles = StyleSheet.create({
     color: "#1E90FF",
     fontSize: 17,
     fontWeight: "bold",
+  },
+  passwordInput: {
+    flex: 1,
+    paddingRight: 48, // espacio para el icono
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 14,
+    padding: 6,
   },
 });

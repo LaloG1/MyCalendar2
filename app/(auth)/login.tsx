@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -27,6 +28,8 @@ export default function LoginScreen() {
     }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <LinearGradient
       colors={["#0A2463", "#1E90FF", "#40E0D0"]}
@@ -39,19 +42,35 @@ export default function LoginScreen() {
 
         <TextInput
           placeholder="Email"
+          placeholderTextColor="#6b7280"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
-          style={styles.input}
+          style={[styles.input, { color: "#111827" }]}
         />
 
-        <TextInput
-          placeholder="Contraseña"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="Contraseña"
+            placeholderTextColor="#6b7280"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            style={[styles.input, styles.passwordInput, { color: "#111827" }]}
+          />
+
+          <TouchableOpacity
+            onPress={() => setShowPassword((prev) => !prev)}
+            style={styles.eyeButton}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={22}
+              color="#1E90FF"
+            />
+          </TouchableOpacity>
+        </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -146,5 +165,21 @@ const styles = StyleSheet.create({
     color: "#1E90FF",
     fontSize: 17,
     fontWeight: "bold",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  passwordInput: {
+    flex: 1,
+    paddingRight: 48, // espacio para el icono
+  },
+
+  eyeButton: {
+    position: "absolute",
+    right: 14,
+    padding: 6,
   },
 });

@@ -465,6 +465,7 @@ export default function CalendarScreen() {
             {/* BUSCAR */}
             <TextInput
               placeholder="Buscar empleado..."
+              placeholderTextColor="#6b7280" // 👈 gris visible
               value={search}
               onChangeText={setSearch}
               style={{
@@ -472,6 +473,7 @@ export default function CalendarScreen() {
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 10,
+                color: "#111827", // 👈 texto negro
               }}
             />
 
@@ -570,6 +572,7 @@ export default function CalendarScreen() {
                 {isException && (
                   <TextInput
                     placeholder="Motivo de excepción"
+                    placeholderTextColor="#6b7280"
                     value={exceptionReason}
                     onChangeText={setExceptionReason}
                     multiline
@@ -578,6 +581,7 @@ export default function CalendarScreen() {
                       padding: 10,
                       borderRadius: 8,
                       marginTop: 10,
+                      color: "#111827",
                     }}
                   />
                 )}
