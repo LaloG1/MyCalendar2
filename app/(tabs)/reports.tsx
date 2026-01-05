@@ -17,10 +17,11 @@ import { Calendar } from "react-native-calendars";
 import { db } from "../../src/firebase/firebase";
 
 import { Asset } from "expo-asset";
+import Constants from "expo-constants";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 
 import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 import { Alert } from "react-native";
 import * as XLSX from "xlsx";
 
@@ -63,6 +64,131 @@ export default function ReportesScreen() {
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [showCalendar, setShowCalendar] = useState(true);
+
+  const saveToDownloads = async (fileUri: string, fileName: string) => {
+    try {
+      const sourceInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!sourceInfo.exists) {
+        throw new Error("El archivo fuente no existe.");
+      }
+
+      const mimeType = getMimeType(fileName);
+
+      if (Platform.OS === "android") {
+        // ✅ Mostrar instrucción ANTES de abrir el selector
+        Alert.alert(
+          "Guardar en Descargas",
+          '1. En el menú que aparecerá, selecciona una app como:\n   • Archivos de Google\n   • Gestor de archivos\n   • Descargas\n2. Luego elige la carpeta "Descargas".\n3. Toca "Guardar".',
+          [
+            { text: "Cancelar", style: "cancel", onPress: () => {} },
+            {
+              text: "Continuar",
+              style: "default",
+              onPress: async () => {
+                try {
+                  await Sharing.shareAsync(fileUri, {
+                    mimeType,
+                    dialogTitle: "Guardar en Descargas",
+                  });
+                } catch (e: any) {
+                  console.warn("Sharing falló:", e.message);
+                  await saveToInternalCache(fileUri, fileName);
+                }
+              },
+            },
+          ]
+        );
+      } else if (Platform.OS === "ios") {
+        Alert.alert(
+          "Guardar en Descargas",
+          '1. Toca "Guardar en Archivos".\n2. Selecciona "Descargas" (o crea una carpeta).\n3. Toca "Agregar".',
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Continuar",
+              style: "default",
+              onPress: async () => {
+                await Sharing.shareAsync(fileUri, {
+                  mimeType,
+                  dialogTitle: "Guardar en Descargas",
+                  UTI: getUTI(mimeType),
+                });
+              },
+            },
+          ]
+        );
+      }
+    } catch (error: any) {
+      console.error("[saveToDownloads] Error:", error);
+      Alert.alert("Error", error.message || "No se pudo iniciar el guardado.");
+    }
+  };
+
+  // Fallback: guardar en caché interno y mostrar ruta
+  const saveToInternalCache = async (fileUri: string, fileName: string) => {
+    if (!FileSystem.cacheDirectory) {
+      throw new Error("cacheDirectory no disponible");
+    }
+
+    const destPath = `${FileSystem.cacheDirectory}Download/${fileName}`;
+    await FileSystem.makeDirectoryAsync(
+      `${FileSystem.cacheDirectory}Download/`,
+      { intermediates: true }
+    );
+    await FileSystem.copyAsync({ from: fileUri, to: destPath });
+
+    const appId = Constants.expoConfig?.android?.package || "com.example.app";
+    const instructions =
+      Platform.OS === "android"
+        ? `Para acceder al archivo:\n\n1. Abre un gestor de archivos (ej. "Archivos de Google").\n2. Ve a:\n   Interno → Android → data → ${appId} → cache → Download\n3. Copia o comparte el archivo desde allí.`
+        : 'El archivo se guardó temporalmente. Usa "Compartir" para guardarlo permanentemente.';
+
+    Alert.alert(
+      "✅ Guardado (interno)",
+      `Nombre: ${fileName}\n\n${instructions}`,
+      [
+        { text: "OK", style: "default" },
+        Platform.OS === "android"
+          ? {
+              text: "Abrir carpeta",
+              style: "default",
+              onPress: () => {
+                // Opcional: abrir la carpeta con Linking (requiere URI file://, pero no siempre funciona)
+                // Por ahora solo informamos.
+              },
+            }
+          : null,
+      ].filter(Boolean) as {
+        text: string;
+        style: "default" | "cancel";
+        onPress?: () => void;
+      }[]
+    );
+  };
+
+  // MIME type helper
+  const getMimeType = (fileName: string): string => {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    const map: Record<string, string> = {
+      pdf: "application/pdf",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      xls: "application/vnd.ms-excel",
+      csv: "text/csv",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      ics: "text/calendar",
+    };
+    return map[ext || ""] || "application/octet-stream";
+  };
+
+  // UTI para iOS
+  const getUTI = (mimeType: string): string | undefined => {
+    if (mimeType === "application/pdf") return "com.adobe.pdf";
+    if (mimeType.startsWith("image/")) return "public.image";
+    if (mimeType === "text/csv") return "public.comma-separated-values-text";
+    return undefined;
+  };
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split("-");
@@ -188,7 +314,7 @@ export default function ReportesScreen() {
         encoding: "base64",
       });
 
-      await Sharing.shareAsync(uri);
+      await saveToDownloads(uri, `reporte_${Date.now()}.xlsx`);
     } else {
       const rows = exportData
         .map(
@@ -301,7 +427,7 @@ export default function ReportesScreen() {
 `;
 
       const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri);
+      await saveToDownloads(uri, `reporte_${Date.now()}.pdf`);
     }
   };
 
